@@ -10,3 +10,17 @@ export const LoginSchema = z.object({
   email: z.string().email(),
   password: z.string(),
 });
+
+export const AddressSchema = z.object({
+  street: z.string(),
+  pincode: z.string().length(6),
+  country: z.string(),
+  city: z.string(),
+});
+
+
+export const UpdateUserSchema = z.object({
+  name: z.string().nullable(),
+  defaultShippingAddress: z.number().nullable(),
+  defaultBillingAddress: z.number().nullable(),
+});
