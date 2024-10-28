@@ -3,7 +3,8 @@ import { AddressSchema, UpdateUserSchema } from "../schema/users";
 import { prismaClient } from "..";
 import { ErrorCode } from "../exceptions/root";
 import { NotFoundException } from "../exceptions/not-found";
-import { Address } from "cluster";
+import { BadRequestsException } from "../exceptions/bad-requests";
+import { Address } from "@prisma/client";
 
 export const addAddress = async (req: Request, res: Response) => {
   AddressSchema.parse(req.body);
@@ -60,6 +61,12 @@ export const updateUser = async (req: Request, res: Response) => {
         ErrorCode.ADDRESS_NOT_FOUND
       );
     }
+    if (shippingAdress.userId !== req.user?.id) {
+      throw new BadRequestsException(
+        "Address doesn/t belong to user",
+        ErrorCode.ADDRESS_DOES_NOT_BELONG_TO_USER
+      );
+    }
   }
   if (validatedData.defaultBillingAddress) {
     try {
@@ -74,13 +81,19 @@ export const updateUser = async (req: Request, res: Response) => {
         ErrorCode.ADDRESS_NOT_FOUND
       );
     }
+    if (billingAdress.userId !== req.user?.id) {
+      throw new BadRequestsException(
+        "Address doesn/t belong to user",
+        ErrorCode.ADDRESS_DOES_NOT_BELONG_TO_USER
+      );
+    }
   }
 
   const updatedUser = await prismaClient.user.update({
     where: {
       id: req.user?.id,
     },
-    data: validatedData
+    data: validatedData,
   });
 
   res.json(updatedUser);
