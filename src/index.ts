@@ -3,10 +3,12 @@ import { PORT } from "./secrets";
 import rootRouter from "./routes";
 import { PrismaClient } from "@prisma/client";
 import { errorMiddleWare } from "./middlewares/errors";
+import { setupSwagger } from "./config/swagger.config";
 
 const app: Express = express();
 
 app.use(express.json());
+setupSwagger(app);
 
 app.use("/", rootRouter);
 
