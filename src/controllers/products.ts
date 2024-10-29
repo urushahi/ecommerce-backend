@@ -1,78 +1,49 @@
 import { Request, Response } from "express";
-import { prismaClient } from "..";
-import { NotFoundException } from "../exceptions/not-found";
-import { ErrorCode } from "../exceptions/root";
+import * as productService from "../services/product.service";
 
 export const createProduct = async (req: Request, res: Response) => {
-  const product = await prismaClient.product.create({
-    data: {
-      ...req.body,
-      tag: req.body.tag.join(","),
-    },
-  });
-
+  const product = await productService.createProduct(req.body);
   res.json(product);
 };
+
 export const updateProduct = async (req: Request, res: Response) => {
   try {
-    const product = req.body;
-    if (product.tag) product.tag = product.tag.join(",");
-
-    const updatedProduct = await prismaClient.product.update({
-      where: {
-        id: +req.params.id,
-      },
-      data: {
-        ...product,
-      },
-    });
-    res.json({
-      product: updatedProduct,
-    });
-  } catch (err) {
-    throw new NotFoundException(
-      "Product not found",
-      ErrorCode.PRODUCT_NOT_FOUND
+    const updatedProduct = await productService.updateProduct(
+      +req.params.id,
+      req.body
     );
+    res.json({ product: updatedProduct });
+  } catch (err) {
+    res.status(404).json({ error: "Product not found" });
   }
 };
 
 export const deleteProduct = async (req: Request, res: Response) => {
   try {
-    const product = await prismaClient.product.delete({
-      where: {
-        id: +req.params.id,
-      },
-    });
+    const product = await productService.deleteProduct(+req.params.id);
     res.json(product);
   } catch (err) {
-    throw new NotFoundException(
-      "Product not found",
-      ErrorCode.PRODUCT_NOT_FOUND
-    );
+    res.status(404).json({ error: "Product not found" });
   }
 };
+
 export const getAllProducts = async (req: Request, res: Response) => {
-  const count = await prismaClient.product.count();
-  const products = await prismaClient.product.findMany({
-    skip: Number(req.query.skip) || 0,
-    take: 5,
-  });
-  res.json({ count, data: products });
+  const skip = Number(req.query.skip) || 0;
+  const products = await productService.getAllProducts(skip, 5);
+  res.json(products);
 };
 
 export const getProductById = async (req: Request, res: Response) => {
   try {
-    const product = await prismaClient.product.findFirstOrThrow({
-      where: {
-        id: +req.params.id,
-      },
-    });
+    const product = await productService.getProductById(+req.params.id);
     res.json(product);
   } catch (err) {
-    throw new NotFoundException(
-      "Product not found",
-      ErrorCode.PRODUCT_NOT_FOUND
-    );
+    res.status(404).json({ error: "Product not found" });
   }
+};
+
+export const searchProducts = async (req: Request, res: Response) => {
+  const query = req.query.q?.toString() || "";
+  const products = await productService.searchProducts(query);
+  res.json(products);
 };
